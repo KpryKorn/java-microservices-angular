@@ -1,0 +1,71 @@
+{
+    "id": "microservices-realm",
+    "realm": "microservices-realm",
+    "enabled": true,
+    "clients": [
+        {
+            "clientId": "gateway-client",
+            "enabled": true,
+            "protocol": "openid-connect",
+            "publicClient": false,
+            "secret": "bW9uLXN1cGVyLXNlY3JldC1wb3VyLWxlcy1qd3QtZGUtbW9uLWFwcGxpY2F0aW9uLW1kZAo=",
+            "redirectUris": [
+                "http://localhost:8080/*"
+            ],
+            "webOrigins": [
+                "http://localhost:4200"
+            ],
+            "directAccessGrantsEnabled": true,
+            "standardFlowEnabled": true
+        }
+    ],
+    "users": [
+        {
+            "username": "user",
+            "enabled": true,
+            "email": "user@example.com",
+            "emailVerified": true,
+            "firstName": "John",
+            "lastName": "Doe",
+            "credentials": [
+                {
+                    "type": "password",
+                    "value": "password",
+                    "temporary": false
+                }
+            ],
+            "realmRoles": [
+                "USER"
+            ]
+        },
+        {
+            "username": "admin",
+            "enabled": true,
+            "email": "admin@example.com",
+            "emailVerified": true,
+            "firstName": "Admin",
+            "lastName": "Sénior",
+            "credentials": [
+                {
+                    "type": "password",
+                    "value": "admin",
+                    "temporary": false
+                }
+            ],
+            "realmRoles": [
+                "ADMIN",
+                "USER"
+            ]
+        }
+    ],
+    "roles": {
+        "realm": [
+            {
+                "name": "USER"
+            },
+            {
+                "name": "ADMIN"
+            }
+        ]
+    }
+}

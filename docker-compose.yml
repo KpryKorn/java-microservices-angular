@@ -1,15 +1,5 @@
 services:
 # --- BDD ----
-  auth-db:
-    image: postgres:16-alpine
-    container_name: auth-database
-    environment:
-      POSTGRES_USER: ${AUTH_DB_USER}
-      POSTGRES_PASSWORD: ${AUTH_DB_PASSWORD}
-      POSTGRES_DB: auth_db
-    ports:
-      - "5432:5432"
-
   chat-db:
     image: postgres:16-alpine
     container_name: chat-database
@@ -20,20 +10,17 @@ services:
     ports:
       - "5433:5432"
 
-# --- MICROSERVICES ---
-  auth-api:
-    build:
-      context: ./auth-service
-    container_name: auth-microservice
-    ports:
-      - "8081:8081"
-    env_file:
-      - .env
+  keycloak-db:
+    image: postgres:16-alpine
+    container_name: keycloak-database
     environment:
-      AUTH_DB_URL: jdbc:postgresql://auth-db:5432/auth_db
-    depends_on:
-      - auth-db
+      POSTGRES_USER: keycloak
+      POSTGRES_PASSWORD: keycloak_password
+      POSTGRES_DB: keycloak
+    ports:
+      - "5434:5432"
 
+# --- MICROSERVICES ---
   chat-api:
     build:
       context: ./chat-service
@@ -46,6 +33,25 @@ services:
       CHAT_DB_URL: jdbc:postgresql://chat-db:5432/chat_db
     depends_on:
       - chat-db
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:24.0.5
+    container_name: keycloak-server
+    command: start-dev --import-realm
+    environment:
+      KC_DB: postgres
+      KC_DB_URL_HOST: keycloak-db
+      KC_DB_URL_DATABASE: keycloak
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: keycloak_password
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+    ports:
+      - "8085:8080"
+    volumes:
+      - ./keycloak/realm-export.json:/opt/keycloak/data/import/realm.json
+    depends_on:
+      - keycloak-db
   
   gateway:
     build:
@@ -54,7 +60,7 @@ services:
     ports:
       - "8080:8080"
     environment:
-      AUTH_INTERNAL_URL: http://auth-api:8081
       CHAT_INTERNAL_URL: http://chat-api:8082
+      KEYCLOAK_INTERNAL_URL: http://keycloak:8080
     depends_on:
-      - auth-api
+      - keycloak

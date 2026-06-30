@@ -5,19 +5,31 @@ spring:
   application:
     name: api-gateway
 
+  security:
+    oauth2:
+      client:
+        registration:
+          keycloak:
+            client-id: gateway-client
+            client-secret: bW9uLXN1cGVyLXNlY3JldC1wb3VyLWxlcy1qd3QtZGUtbW9uLWFwcGxpY2F0aW9uLW1kZAo=
+            scope: openid, profile, email
+            authorization-grant-type: authorization_code
+            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+        provider:
+          keycloak:
+            issuer-uri: ${KEYCLOAK_INTERNAL_URL:http://keycloak:8080}/realms/microservices-realm
+
   cloud:
     gateway:
       server:
         webflux:
           routes:
-            - id: auth-service-route
-              uri: ${AUTH_INTERNAL_URL:http://localhost:8081}
-              predicates:
-                - Path=/api/auth/**
             - id: chat-service-route
               uri: ${CHAT_INTERNAL_URL:http://localhost:8082}
               predicates:
                 - Path=/api/chat/**
+              filters:
+                - TokenRelay=
           globalcors:
             cors-configurations:
               "[/**]":
@@ -30,9 +42,3 @@ spring:
                   - DELETE
                   - OPTIONS
                 allowedHeaders: "*"
-
-security:
-  jwt:
-    secret-key: bW9uLXN1cGVyLXNlY3JldC1wb3VyLWxlcy1qd3QtZGUtbW9uLWFwcGxpY2F0aW9uLW1kZAo=
-    access-token-expiration: 900000
-    refresh-token-expiration: 604800000
