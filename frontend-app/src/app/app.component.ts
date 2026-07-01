@@ -1,6 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
+import { environment } from '../environments/environment';
 
 @Component({
   selector: 'app-root',
@@ -17,7 +18,7 @@ export class App implements OnInit {
 
   ngOnInit(): void {
     this.http
-      .get('http://localhost:8080/api/chat/ping', {
+      .get(`${environment.gatewayUrl}/api/chat/ping`, {
         responseType: 'text',
         withCredentials: true,
       })
@@ -35,6 +36,6 @@ export class App implements OnInit {
   }
 
   login(): void {
-    window.location.href = 'http://localhost:8080/oauth2/authorization/keycloak';
+    window.location.href = `${environment.gatewayUrl}/oauth2/authorization/keycloak`;
   }
 }

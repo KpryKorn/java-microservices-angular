@@ -11,13 +11,13 @@ spring:
         registration:
           keycloak:
             client-id: gateway-client
-            client-secret: bW9uLXN1cGVyLXNlY3JldC1wb3VyLWxlcy1qd3QtZGUtbW9uLWFwcGxpY2F0aW9uLW1kZAo=
+            client-secret: ${GATEWAY_CLIENT_SECRET}
             scope: openid, profile, email
             authorization-grant-type: authorization_code
             redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
         provider:
           keycloak:
-            authorization-uri: http://localhost:8085/realms/microservices-realm/protocol/openid-connect/auth
+            authorization-uri: ${KEYCLOAK_PUBLIC_URL:http://localhost:8085}/realms/microservices-realm/protocol/openid-connect/auth
             token-uri: ${KEYCLOAK_INTERNAL_URL:http://localhost:8085}/realms/microservices-realm/protocol/openid-connect/token
             jwk-set-uri: ${KEYCLOAK_INTERNAL_URL:http://localhost:8085}/realms/microservices-realm/protocol/openid-connect/certs
             user-info-uri: ${KEYCLOAK_INTERNAL_URL:http://localhost:8085}/realms/microservices-realm/protocol/openid-connect/userinfo
@@ -37,7 +37,7 @@ spring:
           globalcors:
             cors-configurations:
               "[/**]":
-                allowedOrigins: "http://localhost:4200"
+                allowedOrigins: "${FRONTEND_URL:http://localhost:4200}"
                 allowedMethods:
                   - GET
                   - POST
@@ -47,3 +47,7 @@ spring:
                   - OPTIONS
                 allowedHeaders: "*"
                 allowCredentials: true
+
+app:
+  frontend-url: ${FRONTEND_URL:http://localhost:4200}
+  keycloak-issuer-uri: ${KEYCLOAK_PUBLIC_URL:http://localhost:8085}/realms/microservices-realm

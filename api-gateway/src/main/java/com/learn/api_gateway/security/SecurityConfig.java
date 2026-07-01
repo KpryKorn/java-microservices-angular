@@ -2,6 +2,7 @@ package com.learn.api_gateway.security;
 
 import java.net.URI;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
@@ -9,7 +10,7 @@ import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.oauth2.client.registration.ClientRegistration;
-import org.springframework.security.oauth2.jwt.JwtTimestampValidator;
+import org.springframework.security.oauth2.jwt.JwtValidators;
 import org.springframework.security.oauth2.jwt.NimbusReactiveJwtDecoder;
 import org.springframework.security.oauth2.jwt.ReactiveJwtDecoderFactory;
 import org.springframework.security.web.server.SecurityWebFilterChain;
@@ -20,7 +21,13 @@ import org.springframework.security.web.server.authentication.logout.ServerLogou
 @EnableWebFluxSecurity
 public class SecurityConfig {
 
-    public SecurityConfig() {
+    private final URI frontendUri;
+    private final String keycloakIssuerUri;
+
+    public SecurityConfig(@Value("${app.frontend-url}") String frontendUrl,
+            @Value("${app.keycloak-issuer-uri}") String keycloakIssuerUri) {
+        this.frontendUri = URI.create(frontendUrl);
+        this.keycloakIssuerUri = keycloakIssuerUri;
     }
 
     @Bean
@@ -46,7 +53,7 @@ public class SecurityConfig {
                         .authenticationSuccessHandler((webFilterExchange, authentication) -> {
                             webFilterExchange.getExchange().getResponse().setStatusCode(HttpStatus.FOUND);
                             webFilterExchange.getExchange().getResponse().getHeaders()
-                                    .setLocation(URI.create("http://localhost:4200"));
+                                    .setLocation(frontendUri);
                             return webFilterExchange.getExchange().getResponse().setComplete();
                         }))
                 .logout(logout -> logout.logoutSuccessHandler(oidcLogoutSuccessHandler()))
@@ -59,14 +66,14 @@ public class SecurityConfig {
             NimbusReactiveJwtDecoder decoder = NimbusReactiveJwtDecoder
                     .withJwkSetUri(clientRegistration.getProviderDetails().getJwkSetUri())
                     .build();
-            decoder.setJwtValidator(new JwtTimestampValidator());
+            decoder.setJwtValidator(JwtValidators.createDefaultWithIssuer(keycloakIssuerUri));
             return decoder;
         };
     }
 
     private ServerLogoutSuccessHandler oidcLogoutSuccessHandler() {
         RedirectServerLogoutSuccessHandler logoutSuccessHandler = new RedirectServerLogoutSuccessHandler();
-        logoutSuccessHandler.setLogoutSuccessUrl(URI.create("http://localhost:4200"));
+        logoutSuccessHandler.setLogoutSuccessUrl(frontendUri);
         return logoutSuccessHandler;
     }
 }
