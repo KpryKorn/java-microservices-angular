@@ -17,7 +17,11 @@ spring:
             redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
         provider:
           keycloak:
-            issuer-uri: ${KEYCLOAK_INTERNAL_URL:http://keycloak:8080}/realms/microservices-realm
+            authorization-uri: http://localhost:8085/realms/microservices-realm/protocol/openid-connect/auth
+            token-uri: ${KEYCLOAK_INTERNAL_URL:http://localhost:8085}/realms/microservices-realm/protocol/openid-connect/token
+            jwk-set-uri: ${KEYCLOAK_INTERNAL_URL:http://localhost:8085}/realms/microservices-realm/protocol/openid-connect/certs
+            user-info-uri: ${KEYCLOAK_INTERNAL_URL:http://localhost:8085}/realms/microservices-realm/protocol/openid-connect/userinfo
+            user-name-attribute: preferred_username
 
   cloud:
     gateway:
@@ -42,3 +46,4 @@ spring:
                   - DELETE
                   - OPTIONS
                 allowedHeaders: "*"
+                allowCredentials: true
