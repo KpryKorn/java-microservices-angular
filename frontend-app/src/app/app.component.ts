@@ -15,6 +15,7 @@ export class App implements OnInit {
 
   protected chatGWIStatus = signal('loading..');
   protected isAuthenticated = signal(false);
+  protected currentUser = signal<{ username: string; email: string; name: string } | null>(null);
 
   ngOnInit(): void {
     this.http
@@ -26,12 +27,24 @@ export class App implements OnInit {
         next: (res) => {
           this.chatGWIStatus.set(res);
           this.isAuthenticated.set(true);
+          this.loadCurrentUser();
         },
         error: (err) => {
           console.error('Erreur authentification BFF:', err);
           this.chatGWIStatus.set('Non authentifié (401)');
           this.isAuthenticated.set(false);
         },
+      });
+  }
+
+  private loadCurrentUser(): void {
+    this.http
+      .get<{ username: string; email: string; name: string }>(`${environment.gatewayUrl}/api/me`, {
+        withCredentials: true,
+      })
+      .subscribe({
+        next: (user) => this.currentUser.set(user),
+        error: (err) => console.error('Erreur récupération utilisateur:', err),
       });
   }
 

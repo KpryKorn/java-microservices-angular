@@ -1,6 +1,10 @@
 <div>
   <p>Chat GWI Service : {{ chatGWIStatus() }}</p>
 
+  @if (isAuthenticated() && currentUser()) {
+    <p>Connecté en tant que : {{ currentUser()!.name }} ({{ currentUser()!.username }})</p>
+  }
+
   @if (!isAuthenticated()) {
     <button
       (click)="login()"
