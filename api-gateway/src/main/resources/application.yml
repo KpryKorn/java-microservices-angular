@@ -27,13 +27,13 @@ spring:
     gateway:
       server:
         webflux:
+          default-filters:
+            - TokenRelay=
           routes:
             - id: chat-service-route
               uri: ${CHAT_INTERNAL_URL:http://localhost:8082}
               predicates:
                 - Path=/api/chat/**
-              filters:
-                - TokenRelay=
           globalcors:
             cors-configurations:
               "[/**]":
