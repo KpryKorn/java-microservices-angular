@@ -10,6 +10,16 @@ services:
     ports:
       - "5433:5432"
 
+  user-db:
+    image: postgres:16-alpine
+    container_name: user-database
+    environment:
+      POSTGRES_USER: ${USER_DB_USER}
+      POSTGRES_PASSWORD: ${USER_DB_PASSWORD}
+      POSTGRES_DB: user_db
+    ports:
+      - "5432:5432"
+
   keycloak-db:
     image: postgres:16-alpine
     container_name: keycloak-database
@@ -35,6 +45,19 @@ services:
       CHAT_DB_URL: jdbc:postgresql://chat-db:5432/chat_db
     depends_on:
       - chat-db
+
+  user-api:
+    build:
+      context: ./user-service
+    container_name: user-microservice
+    ports:
+      - "8081:8081"
+    env_file:
+      - .env
+    environment:
+      USER_DB_URL: jdbc:postgresql://user-db:5432/user_db
+    depends_on:
+      - user-db
 
   keycloak:
     image: quay.io/keycloak/keycloak:24.0.5
@@ -69,6 +92,7 @@ services:
       - .env
     environment:
       CHAT_INTERNAL_URL: http://chat-api:8082
+      USER_INTERNAL_URL: http://user-api:8081
       KEYCLOAK_INTERNAL_URL: http://keycloak:8080
       KEYCLOAK_PUBLIC_URL: ${KEYCLOAK_PUBLIC_URL:-http://localhost:8085}
       FRONTEND_URL: ${FRONTEND_URL:-http://localhost:4200}
