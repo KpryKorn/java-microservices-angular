@@ -11,6 +11,7 @@ import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.oauth2.client.registration.ClientRegistration;
+import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.security.oauth2.jwt.JwtValidators;
 import org.springframework.security.oauth2.jwt.NimbusReactiveJwtDecoder;
 import org.springframework.security.oauth2.jwt.ReactiveJwtDecoderFactory;
@@ -21,17 +22,26 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.reactive.CorsConfigurationSource;
 import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource;
 
+import com.learn.api_gateway.sync.UserSyncService;
+
+import reactor.core.publisher.Mono;
+
 @Configuration
 @EnableWebFluxSecurity
 public class SecurityConfig {
 
     private final URI frontendUri;
+    private final URI chatRedirectUri;
     private final String keycloakIssuerUri;
+    private final UserSyncService userSyncService;
 
     public SecurityConfig(@Value("${app.frontend-url}") String frontendUrl,
-            @Value("${app.keycloak-issuer-uri}") String keycloakIssuerUri) {
+            @Value("${app.keycloak-issuer-uri}") String keycloakIssuerUri,
+            UserSyncService userSyncService) {
         this.frontendUri = URI.create(frontendUrl);
+        this.chatRedirectUri = URI.create(frontendUrl + "/chat");
         this.keycloakIssuerUri = keycloakIssuerUri;
+        this.userSyncService = userSyncService;
     }
 
     @Bean
@@ -55,10 +65,14 @@ public class SecurityConfig {
                         .anyExchange().permitAll())
                 .oauth2Login(oauth2 -> oauth2
                         .authenticationSuccessHandler((webFilterExchange, authentication) -> {
-                            webFilterExchange.getExchange().getResponse().setStatusCode(HttpStatus.FOUND);
-                            webFilterExchange.getExchange().getResponse().getHeaders()
-                                    .setLocation(frontendUri);
-                            return webFilterExchange.getExchange().getResponse().setComplete();
+                            OidcUser oidcUser = (OidcUser) authentication.getPrincipal();
+                            return userSyncService.syncUser(oidcUser)
+                                    .then(Mono.defer(() -> {
+                                        webFilterExchange.getExchange().getResponse().setStatusCode(HttpStatus.FOUND);
+                                        webFilterExchange.getExchange().getResponse().getHeaders()
+                                                .setLocation(chatRedirectUri);
+                                        return webFilterExchange.getExchange().getResponse().setComplete();
+                                    }));
                         }))
                 .logout(logout -> logout.logoutSuccessHandler(oidcLogoutSuccessHandler()))
                 .build();

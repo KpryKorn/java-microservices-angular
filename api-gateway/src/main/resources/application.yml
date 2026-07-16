@@ -55,3 +55,5 @@ spring:
 app:
   frontend-url: ${FRONTEND_URL:http://localhost:4200}
   keycloak-issuer-uri: ${KEYCLOAK_PUBLIC_URL:http://localhost:8085}/realms/microservices-realm
+  user-service-url: ${USER_INTERNAL_URL:http://localhost:8081}
+  chat-service-url: ${CHAT_INTERNAL_URL:http://localhost:8082}

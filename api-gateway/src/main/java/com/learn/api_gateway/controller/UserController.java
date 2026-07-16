@@ -1,4 +1,4 @@
-package com.learn.api_gateway;
+package com.learn.api_gateway.controller;
 
 import java.util.Map;
 

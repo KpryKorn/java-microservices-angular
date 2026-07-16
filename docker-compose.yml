@@ -79,6 +79,7 @@ services:
       - "8085:8080"
     volumes:
       - ./keycloak/realm-export.json:/opt/keycloak/data/import/realm.json
+      - ./keycloak/themes/microservices:/opt/keycloak/themes/microservices
     depends_on:
       - keycloak-db
   

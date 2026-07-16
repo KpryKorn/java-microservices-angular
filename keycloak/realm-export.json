@@ -2,6 +2,7 @@
     "id": "microservices-realm",
     "realm": "microservices-realm",
     "enabled": true,
+    "loginTheme": "microservices",
     "clients": [
         {
             "clientId": "gateway-client",
