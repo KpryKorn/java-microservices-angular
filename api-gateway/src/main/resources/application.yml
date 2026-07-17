@@ -30,6 +30,10 @@ spring:
           default-filters:
             - TokenRelay=
           routes:
+            - id: chat-websocket-route
+              uri: ${CHAT_INTERNAL_URL:http://localhost:8082}
+              predicates:
+                - Path=/ws/**
             - id: chat-service-route
               uri: ${CHAT_INTERNAL_URL:http://localhost:8082}
               predicates:

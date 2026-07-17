@@ -1,4 +1,4 @@
-<main class="mx-auto max-w-xl px-6 py-12">
+<main class="mx-auto max-w-xl px-6 py-12 text-gray-900">
   <h1 class="mb-4 text-xl font-semibold text-gray-900">Espace chat</h1>
 
   @if (authService.currentUser(); as user) {
@@ -7,5 +7,72 @@
     </p>
   }
 
-  <p class="text-sm text-gray-500">Statut chat-service : {{ chatStatus() }}</p>
+  <p class="mb-6 text-sm text-gray-500">Statut chat-service : {{ chatStatus() }}</p>
+
+  <div class="mb-6 space-y-3">
+    <label class="block text-sm text-gray-700">
+      Ticket ID
+      <input
+        [value]="ticketId()"
+        (input)="updateTicketId($event)"
+        class="mt-1 w-full border border-gray-300 px-3 py-2"
+        placeholder="UUID du ticket"
+      />
+    </label>
+
+    <label class="block text-sm text-gray-700">
+      Sender UUID
+      <input
+        [value]="senderId()"
+        (input)="updateSenderId($event)"
+        class="mt-1 w-full border border-gray-300 px-3 py-2"
+        placeholder="UUID de l'émetteur"
+      />
+    </label>
+
+    <p class="text-sm text-gray-500">Connexion WS : {{ connectionStatus() }}</p>
+
+    <div class="flex gap-2">
+      <button type="button" (click)="connect()" class="border border-gray-300 px-3 py-2">
+        Se connecter
+      </button>
+      <button type="button" (click)="disconnect()" class="border border-gray-300 px-3 py-2">
+        Déconnecter
+      </button>
+    </div>
+  </div>
+
+  <section class="space-y-4">
+    <div class="flex items-baseline justify-between gap-4">
+      <h2 class="text-lg font-semibold text-gray-900">Messages</h2>
+      <p class="text-xs text-gray-500">/topic/tickets/{{ ticketId() }}</p>
+    </div>
+
+    @if (messages().length === 0) {
+      <p class="text-sm text-gray-500">Aucun message.</p>
+    }
+
+    <div class="space-y-3">
+      @for (message of messages(); track message.id ?? message.sentAt) {
+        <article class="border-b border-gray-200 pb-3">
+          <p class="text-xs text-gray-500">{{ message.senderId }} · {{ message.sentAt }}</p>
+          <p class="whitespace-pre-wrap text-sm text-gray-900">
+            {{ message.content }}
+          </p>
+        </article>
+      }
+    </div>
+
+    <form class="flex gap-2" (submit)="handleSubmit($event)">
+      <input
+        [value]="draftMessage()"
+        (input)="updateDraftMessage($event)"
+        class="flex-1 border border-gray-300 px-3 py-2"
+        placeholder="Tape ton message ici"
+      />
+      <button type="submit" class="border border-gray-300 px-3 py-2" [disabled]="!canSend()">
+        Envoyer
+      </button>
+    </form>
+  </section>
 </main>
