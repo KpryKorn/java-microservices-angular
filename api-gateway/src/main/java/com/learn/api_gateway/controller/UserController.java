@@ -13,6 +13,7 @@ public class UserController {
     @GetMapping("/api/me")
     public Map<String, Object> me(@AuthenticationPrincipal OidcUser user) {
         return Map.of(
+                "id", user.getSubject(),
                 "username", user.getPreferredUsername(),
                 "email", user.getEmail(),
                 "name", user.getFullName());

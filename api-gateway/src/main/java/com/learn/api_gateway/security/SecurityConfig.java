@@ -61,7 +61,7 @@ public class SecurityConfig {
                             return exchange.getResponse().setComplete();
                         }))
                 .authorizeExchange(exchanges -> exchanges
-                        .pathMatchers("/api/chat/**", "/api/user/**", "/api/me").authenticated()
+                        .pathMatchers("/api/chat/**", "/api/user/**", "/api/me", "/ws/**").authenticated()
                         .anyExchange().permitAll())
                 .oauth2Login(oauth2 -> oauth2
                         .authenticationSuccessHandler((webFilterExchange, authentication) -> {

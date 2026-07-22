@@ -1,0 +1,4 @@
+- [x] Connecter le service de chat à la gateway
+  - [] CORS ?
+- [] Styliser l'app frontend
+- [] Récupérer les vrais valeurs ticketId et senderId pour le chat
