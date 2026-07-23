@@ -10,30 +10,38 @@
   <p class="mb-6 text-sm text-gray-500">Statut chat-service : {{ chatStatus() }}</p>
 
   <div class="mb-6 space-y-3">
+    <!-- Sélection du ticket dynamique -->
     <label class="block text-sm text-gray-700">
-      Ticket ID
-      <input
-        [value]="ticketId()"
-        (input)="updateTicketId($event)"
-        class="mt-1 w-full border border-gray-300 px-3 py-2"
-        placeholder="UUID du ticket"
-      />
-    </label>
-
-    <label class="block text-sm text-gray-700">
-      Sender UUID
-      <input
-        [value]="senderId()"
-        (input)="updateSenderId($event)"
-        class="mt-1 w-full border border-gray-300 px-3 py-2"
-        placeholder="UUID de l'émetteur"
-      />
+      Ticket
+      @if (userTickets().length > 0) {
+        <select
+          [value]="ticketId()"
+          (change)="updateTicketId($event)"
+          class="mt-1 w-full border border-gray-300 px-3 py-2 bg-white"
+        >
+          @for (ticket of userTickets(); track ticket.id) {
+            <option [value]="ticket.id">{{ ticket.subject }} ({{ ticket.status }})</option>
+          }
+        </select>
+      } @else {
+        <input
+          [value]="ticketId()"
+          (input)="updateTicketId($event)"
+          class="mt-1 w-full border border-gray-300 px-3 py-2"
+          placeholder="UUID du ticket"
+        />
+      }
     </label>
 
     <p class="text-sm text-gray-500">Connexion WS : {{ connectionStatus() }}</p>
 
     <div class="flex gap-2">
-      <button type="button" (click)="connect()" class="border border-gray-300 px-3 py-2">
+      <button
+        type="button"
+        (click)="connect()"
+        [disabled]="!ticketId()"
+        class="border border-gray-300 px-3 py-2 disabled:opacity-50"
+      >
         Se connecter
       </button>
       <button type="button" (click)="disconnect()" class="border border-gray-300 px-3 py-2">
@@ -45,7 +53,9 @@
   <section class="space-y-4">
     <div class="flex items-baseline justify-between gap-4">
       <h2 class="text-lg font-semibold text-gray-900">Messages</h2>
-      <p class="text-xs text-gray-500">/topic/tickets/{{ ticketId() }}</p>
+      @if (ticketId()) {
+        <p class="text-xs text-gray-500">/topic/tickets/{{ ticketId() }}</p>
+      }
     </div>
 
     @if (messages().length === 0) {
@@ -70,7 +80,11 @@
         class="flex-1 border border-gray-300 px-3 py-2"
         placeholder="Tape ton message ici"
       />
-      <button type="submit" class="border border-gray-300 px-3 py-2" [disabled]="!canSend()">
+      <button
+        type="submit"
+        class="border border-gray-300 px-3 py-2 disabled:opacity-50"
+        [disabled]="!canSend()"
+      >
         Envoyer
       </button>
     </form>

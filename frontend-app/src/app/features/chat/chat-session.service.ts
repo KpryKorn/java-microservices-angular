@@ -26,10 +26,10 @@ export class ChatSessionService {
     this.activeTicketId = ticketId;
     onStatus('connexion...');
 
-    const websocketUrl = new URL('/ws', environment.chatServiceUrl).toString();
+    const websocketUrl = new URL('/ws', environment.gatewayUrl).toString().replace('http', 'ws');
 
     this.client = new Client({
-      brokerURL: websocketUrl.replace('http', 'ws'),
+      brokerURL: websocketUrl,
       reconnectDelay: 0,
       debug: () => undefined,
     });

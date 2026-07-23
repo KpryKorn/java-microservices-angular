@@ -1,8 +1,11 @@
 import { HttpClient } from '@angular/common/http';
 import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
 import { environment } from '../../../environments/environment';
+import { Ticket } from '../../core/models/ticket.model';
 import { AuthService } from '../../core/services/auth.service';
 import { ChatSessionService, ChatTicketMessage } from './chat-session.service';
+import { ChatTicketService } from './chat-ticket.service';
 
 @Component({
   selector: 'app-chat',
@@ -11,22 +14,28 @@ import { ChatSessionService, ChatTicketMessage } from './chat-session.service';
 })
 export class ChatComponent implements OnInit, OnDestroy {
   private readonly http = inject(HttpClient);
+  private readonly route = inject(ActivatedRoute);
   private readonly chatSessionService = inject(ChatSessionService);
+  private readonly chatTicketService = inject(ChatTicketService);
   protected readonly authService = inject(AuthService);
 
   protected readonly chatStatus = signal('chargement...');
   protected readonly connectionStatus = signal<
     'déconnecté' | 'connexion...' | 'connecté' | 'erreur websocket'
   >('déconnecté');
-  protected readonly ticketId = signal('55555555-5555-5555-5555-555555555555');
-  protected readonly senderId = signal('');
+
+  protected readonly ticketId = signal<string>('');
+  protected readonly senderId = signal<string>('');
+  protected readonly userTickets = signal<Ticket[]>([]);
   protected readonly draftMessage = signal('');
   protected readonly messages = signal<ChatTicketMessage[]>([]);
+
   protected readonly canSend = computed(
     () =>
       this.connectionStatus() === 'connecté' &&
       this.senderId().trim().length > 0 &&
-      this.draftMessage().trim().length > 0,
+      this.draftMessage().trim().length > 0 &&
+      this.ticketId().trim().length > 0,
   );
 
   ngOnInit(): void {
@@ -40,14 +49,38 @@ export class ChatComponent implements OnInit, OnDestroy {
         error: () => this.chatStatus.set('indisponible'),
       });
 
-    this.senderId.set(this.resolveSenderId());
+    const currentUser = this.authService.currentUser();
+    if (currentUser?.id) {
+      this.senderId.set(currentUser.id);
+    }
+
+    const routeTicketId = this.route.snapshot.paramMap.get('ticketId');
+    if (routeTicketId) {
+      this.ticketId.set(routeTicketId);
+    } else {
+      this.loadUserTickets();
+    }
   }
 
   ngOnDestroy(): void {
     this.chatSessionService.disconnect();
   }
 
+  private loadUserTickets(): void {
+    this.chatTicketService.getUserTickets().subscribe({
+      next: (tickets) => {
+        this.userTickets.set(tickets);
+        if (tickets.length > 0) {
+          this.ticketId.set(tickets[0].id);
+        }
+      },
+      error: (err) => console.error('Erreur lors de la récupération des tickets', err),
+    });
+  }
+
   connect(): void {
+    if (!this.ticketId()) return;
+
     this.messages.set([]);
     this.chatSessionService.connect(
       this.ticketId(),
@@ -77,34 +110,16 @@ export class ChatComponent implements OnInit, OnDestroy {
     this.sendMessage();
   }
 
-  protected updateTicketId(event: Event): void {
-    this.ticketId.set(this.readInputValue(event));
-  }
-
-  protected updateSenderId(event: Event): void {
-    this.senderId.set(this.readInputValue(event));
+  protected selectTicket(id: string): void {
+    this.ticketId.set(id);
   }
 
   protected updateDraftMessage(event: Event): void {
-    this.draftMessage.set(this.readInputValue(event));
+    this.draftMessage.set((event.target as HTMLInputElement).value);
   }
 
-  private resolveSenderId(): string {
-    const currentUser = this.authService.currentUser();
-
-    if (!currentUser) {
-      return '';
-    }
-
-    const knownSenderIds: Record<string, string> = {
-      user: '21111111-1111-1111-1111-111111111111',
-      admin: '22222222-2222-2222-2222-222222222222',
-    };
-
-    return knownSenderIds[currentUser.username] ?? '';
-  }
-
-  private readInputValue(event: Event): string {
-    return (event.target as HTMLInputElement).value;
+  protected updateTicketId(event: Event): void {
+    const target = event.target as HTMLSelectElement | HTMLInputElement;
+    this.ticketId.set(target.value);
   }
 }

@@ -21,43 +21,49 @@ import reactor.core.publisher.Mono;
 @Component
 public class UserSyncService {
 
-    private static final Logger log = LoggerFactory.getLogger(UserSyncService.class);
+        private static final Logger log = LoggerFactory.getLogger(UserSyncService.class);
 
-    private final WebClient webClient;
-    private final String userServiceUrl;
-    private final String chatServiceUrl;
+        private final WebClient webClient;
+        private final String userServiceUrl;
+        private final String chatServiceUrl;
 
-    public UserSyncService(
-            @Value("${app.user-service-url}") String userServiceUrl,
-            @Value("${app.chat-service-url}") String chatServiceUrl) {
-        this.webClient = WebClient.builder().build();
-        this.userServiceUrl = userServiceUrl;
-        this.chatServiceUrl = chatServiceUrl;
-    }
+        public UserSyncService(
+                        @Value("${app.user-service-url}") String userServiceUrl,
+                        @Value("${app.chat-service-url}") String chatServiceUrl) {
+                this.webClient = WebClient.builder().build();
+                this.userServiceUrl = userServiceUrl;
+                this.chatServiceUrl = chatServiceUrl;
+        }
 
-    public Mono<Void> syncUser(OidcUser oidcUser) {
-        UUID keycloakUserId = UUID.fromString(oidcUser.getSubject());
+        public Mono<Void> syncUser(OidcUser oidcUser, String accessToken) {
+                UUID keycloakUserId = UUID.fromString(oidcUser.getSubject());
 
-        Mono<Void> syncProfile = webClient.post()
-                .uri(userServiceUrl + "/api/user/profile/sync")
-                .bodyValue(
-                        new UserProfileSyncRequest(keycloakUserId, oidcUser.getGivenName(), oidcUser.getFamilyName()))
-                .retrieve()
-                .toBodilessEntity()
-                .doOnError(error -> log.error("Échec de synchronisation du profil utilisateur (user-service)", error))
-                .onErrorResume(error -> Mono.empty())
-                .then();
+                Mono<Void> syncProfile = webClient.post()
+                                .uri(userServiceUrl + "/api/user/profile/sync")
+                                .headers(headers -> headers.setBearerAuth(accessToken))
+                                .bodyValue(
+                                                new UserProfileSyncRequest(keycloakUserId, oidcUser.getGivenName(),
+                                                                oidcUser.getFamilyName()))
+                                .retrieve()
+                                .toBodilessEntity()
+                                .doOnError(error -> log.error(
+                                                "Échec de synchronisation du profil utilisateur (user-service)", error))
+                                .onErrorResume(error -> Mono.empty())
+                                .then();
 
-        Mono<Void> syncShadow = webClient.post()
-                .uri(chatServiceUrl + "/api/chat/users/sync")
-                .bodyValue(
-                        new UserShadowSyncRequest(keycloakUserId, oidcUser.getPreferredUsername(), oidcUser.getEmail()))
-                .retrieve()
-                .toBodilessEntity()
-                .doOnError(error -> log.error("Échec de synchronisation de l'utilisateur (chat-service)", error))
-                .onErrorResume(error -> Mono.empty())
-                .then();
+                Mono<Void> syncShadow = webClient.post()
+                                .uri(chatServiceUrl + "/api/chat/users/sync")
+                                .headers(headers -> headers.setBearerAuth(accessToken))
+                                .bodyValue(
+                                                new UserShadowSyncRequest(keycloakUserId,
+                                                                oidcUser.getPreferredUsername(), oidcUser.getEmail()))
+                                .retrieve()
+                                .toBodilessEntity()
+                                .doOnError(error -> log.error(
+                                                "Échec de synchronisation de l'utilisateur (chat-service)", error))
+                                .onErrorResume(error -> Mono.empty())
+                                .then();
 
-        return Mono.when(syncProfile, syncShadow);
-    }
+                return Mono.when(syncProfile, syncShadow);
+        }
 }
