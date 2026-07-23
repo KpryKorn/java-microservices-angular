@@ -58,6 +58,8 @@ services:
       - .env
     environment:
       CHAT_DB_URL: jdbc:postgresql://chat-db:5432/chat_db
+      KEYCLOAK_INTERNAL_URL: http://keycloak:8080
+      KEYCLOAK_PUBLIC_URL: ${KEYCLOAK_PUBLIC_URL:-http://localhost:8085}
     depends_on:
       chat-db:
         condition: service_healthy
@@ -72,6 +74,8 @@ services:
       - .env
     environment:
       USER_DB_URL: jdbc:postgresql://user-db:5432/user_db
+      KEYCLOAK_INTERNAL_URL: http://keycloak:8080
+      KEYCLOAK_PUBLIC_URL: ${KEYCLOAK_PUBLIC_URL:-http://localhost:8085}
     depends_on:
       user-db:
         condition: service_healthy

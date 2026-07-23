@@ -35,9 +35,8 @@ public class UserSyncService {
                 this.chatServiceUrl = chatServiceUrl;
         }
 
-        public Mono<Void> syncUser(OidcUser oidcUser) {
+        public Mono<Void> syncUser(OidcUser oidcUser, String accessToken) {
                 UUID keycloakUserId = UUID.fromString(oidcUser.getSubject());
-                String accessToken = oidcUser.getIdToken().getTokenValue();
 
                 Mono<Void> syncProfile = webClient.post()
                                 .uri(userServiceUrl + "/api/user/profile/sync")

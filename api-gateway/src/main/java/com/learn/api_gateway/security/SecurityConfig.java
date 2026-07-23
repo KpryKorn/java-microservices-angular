@@ -10,7 +10,15 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
+import org.springframework.security.oauth2.client.ReactiveOAuth2AuthorizedClientManager;
+import org.springframework.security.oauth2.client.ReactiveOAuth2AuthorizedClientProvider;
+import org.springframework.security.oauth2.client.ReactiveOAuth2AuthorizedClientProviderBuilder;
+import org.springframework.security.oauth2.client.ReactiveOAuth2AuthorizedClientService;
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.client.registration.ClientRegistration;
+import org.springframework.security.oauth2.client.registration.ReactiveClientRegistrationRepository;
+import org.springframework.security.oauth2.client.web.DefaultReactiveOAuth2AuthorizedClientManager;
+import org.springframework.security.oauth2.client.web.server.ServerOAuth2AuthorizedClientRepository;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.security.oauth2.jwt.JwtValidators;
 import org.springframework.security.oauth2.jwt.NimbusReactiveJwtDecoder;
@@ -34,14 +42,17 @@ public class SecurityConfig {
     private final URI chatRedirectUri;
     private final String keycloakIssuerUri;
     private final UserSyncService userSyncService;
+    private final ReactiveOAuth2AuthorizedClientService authorizedClientService;
 
     public SecurityConfig(@Value("${app.frontend-url}") String frontendUrl,
             @Value("${app.keycloak-issuer-uri}") String keycloakIssuerUri,
-            UserSyncService userSyncService) {
+            UserSyncService userSyncService,
+            ReactiveOAuth2AuthorizedClientService authorizedClientService) {
         this.frontendUri = URI.create(frontendUrl);
         this.chatRedirectUri = URI.create(frontendUrl + "/chat");
         this.keycloakIssuerUri = keycloakIssuerUri;
         this.userSyncService = userSyncService;
+        this.authorizedClientService = authorizedClientService;
     }
 
     @Bean
@@ -66,8 +77,16 @@ public class SecurityConfig {
                 .oauth2Login(oauth2 -> oauth2
                         .authenticationSuccessHandler((webFilterExchange, authentication) -> {
                             OidcUser oidcUser = (OidcUser) authentication.getPrincipal();
-                            return userSyncService.syncUser(oidcUser)
-                                    .then(Mono.defer(() -> {
+
+                            OAuth2AuthenticationToken authToken = (OAuth2AuthenticationToken) authentication;
+
+                            return authorizedClientService
+                                    .loadAuthorizedClient(authToken.getAuthorizedClientRegistrationId(),
+                                            authToken.getName())
+                                    .flatMap(client -> {
+                                        String accessToken = client.getAccessToken().getTokenValue();
+                                        return userSyncService.syncUser(oidcUser, accessToken);
+                                    }).then(Mono.defer(() -> {
                                         webFilterExchange.getExchange().getResponse().setStatusCode(HttpStatus.FOUND);
                                         webFilterExchange.getExchange().getResponse().getHeaders()
                                                 .setLocation(chatRedirectUri);
@@ -106,5 +125,20 @@ public class SecurityConfig {
         RedirectServerLogoutSuccessHandler logoutSuccessHandler = new RedirectServerLogoutSuccessHandler();
         logoutSuccessHandler.setLogoutSuccessUrl(frontendUri);
         return logoutSuccessHandler;
+    }
+
+    @Bean
+    public ReactiveOAuth2AuthorizedClientManager authorizedClientManager(
+            ReactiveClientRegistrationRepository clientRegistrationRepository,
+            ServerOAuth2AuthorizedClientRepository authorizedClientRepository) {
+
+        ReactiveOAuth2AuthorizedClientProvider provider = ReactiveOAuth2AuthorizedClientProviderBuilder.builder()
+                .authorizationCode().refreshToken().build();
+
+        DefaultReactiveOAuth2AuthorizedClientManager manager = new DefaultReactiveOAuth2AuthorizedClientManager(
+                clientRegistrationRepository, authorizedClientRepository);
+
+        manager.setAuthorizedClientProvider(provider);
+        return manager;
     }
 }
