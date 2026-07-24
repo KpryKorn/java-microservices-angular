@@ -1,4 +1,8 @@
 - [x] Connecter le service de chat à la gateway
   - [x] CORS ?
-- [] Styliser l'app frontend
+- [x] Styliser l'app frontend
 - [x] Récupérer les vrais valeurs ticketId et senderId pour le chat
+- [] Interface admin -> l'admin choisit son ticket et s'y connecte
+  - [] endpoint qui renvoie tous les tickets ouverts
+  - [] sécurisé par le rôle admin uniquement
+- [] Historique de message lié au ticket
