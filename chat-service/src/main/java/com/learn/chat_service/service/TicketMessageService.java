@@ -19,28 +19,30 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class TicketMessageService {
 
-    private final TicketRepository ticketRepository;
-    private final TicketMessageRepository ticketMessageRepository;
+        private final TicketRepository ticketRepository;
+        private final TicketMessageRepository ticketMessageRepository;
 
-    @Transactional
-    public TicketMessageResponse createMessage(UUID ticketId, TicketMessageSendRequest request) {
-        Ticket ticket = ticketRepository.findById(ticketId)
-                .orElseThrow(() -> new IllegalArgumentException("Ticket introuvable: " + ticketId));
+        @Transactional
+        public TicketMessageResponse createMessage(UUID ticketId, UUID senderId, String senderUsername,
+                        TicketMessageSendRequest request) {
+                Ticket ticket = ticketRepository.findById(ticketId)
+                                .orElseThrow(() -> new IllegalArgumentException("Ticket introuvable: " + ticketId));
 
-        TicketMessage message = TicketMessage.builder()
-                .ticket(ticket)
-                .senderId(request.senderId())
-                .content(request.content())
-                .sentAt(LocalDateTime.now())
-                .build();
+                TicketMessage message = TicketMessage.builder()
+                                .ticket(ticket)
+                                .senderId(senderId)
+                                .content(request.content())
+                                .sentAt(LocalDateTime.now())
+                                .build();
 
-        TicketMessage savedMessage = ticketMessageRepository.save(message);
+                TicketMessage savedMessage = ticketMessageRepository.save(message);
 
-        return new TicketMessageResponse(
-                savedMessage.getId(),
-                ticketId,
-                savedMessage.getSenderId(),
-                savedMessage.getContent(),
-                savedMessage.getSentAt());
-    }
+                return new TicketMessageResponse(
+                                savedMessage.getId(),
+                                ticketId,
+                                savedMessage.getSenderId(),
+                                senderUsername,
+                                savedMessage.getContent(),
+                                savedMessage.getSentAt());
+        }
 }

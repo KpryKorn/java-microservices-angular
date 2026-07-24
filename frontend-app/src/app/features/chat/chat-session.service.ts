@@ -1,14 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Client, IMessage, StompSubscription } from '@stomp/stompjs';
 import { environment } from '../../../environments/environment';
-
-export interface ChatTicketMessage {
-  id?: string;
-  ticketId: string;
-  senderId: string;
-  content: string;
-  sentAt: string;
-}
+import { ChatTicketMessage } from '../../core/models/ticket.model';
 
 @Injectable({ providedIn: 'root' })
 export class ChatSessionService {
@@ -57,7 +50,7 @@ export class ChatSessionService {
 
     this.client.publish({
       destination: `/app/tickets/${this.activeTicketId}/messages`,
-      body: JSON.stringify({ senderId, content }),
+      body: JSON.stringify({ content }),
     });
   }
 

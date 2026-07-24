@@ -3,6 +3,8 @@ package com.learn.chat_service.entity;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+import org.hibernate.annotations.CreationTimestamp;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -41,6 +43,7 @@ public class TicketMessage {
     @Column(nullable = false)
     private String content;
 
+    @CreationTimestamp
     @Column(name = "sent_at", nullable = false)
     private LocalDateTime sentAt;
 }

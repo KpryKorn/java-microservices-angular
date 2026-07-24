@@ -1,15 +1,16 @@
+import { DatePipe } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { environment } from '../../../environments/environment';
-import { Ticket } from '../../core/models/ticket.model';
+import { ChatTicketMessage, Ticket } from '../../core/models/ticket.model';
 import { AuthService } from '../../core/services/auth.service';
-import { ChatSessionService, ChatTicketMessage } from './chat-session.service';
+import { ChatSessionService } from './chat-session.service';
 import { ChatTicketService } from './chat-ticket.service';
 
 @Component({
   selector: 'app-chat',
-  imports: [],
+  imports: [DatePipe],
   templateUrl: './chat.component.html',
 })
 export class ChatComponent implements OnInit, OnDestroy {
