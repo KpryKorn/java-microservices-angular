@@ -29,6 +29,11 @@ export class ChatComponent implements OnInit, OnDestroy {
   protected readonly userTickets = signal<Ticket[]>([]);
   protected readonly draftMessage = signal('');
   protected readonly messages = signal<ChatTicketMessage[]>([]);
+  protected readonly showCreateForm = signal(false);
+  protected readonly createSubject = signal('');
+  protected readonly createMotif = signal('');
+  protected readonly createLoading = signal(false);
+  protected readonly createError = signal('');
 
   protected readonly canSend = computed(
     () =>
@@ -45,7 +50,7 @@ export class ChatComponent implements OnInit, OnDestroy {
         withCredentials: true,
       })
       .subscribe({
-        next: (res) => this.chatStatus.set(res),
+        next: (res) => this.chatStatus.set('disponible'),
         error: () => this.chatStatus.set('indisponible'),
       });
 
@@ -121,5 +126,44 @@ export class ChatComponent implements OnInit, OnDestroy {
   protected updateTicketId(event: Event): void {
     const target = event.target as HTMLSelectElement | HTMLInputElement;
     this.ticketId.set(target.value);
+  }
+
+  toggleCreateForm() {
+    this.showCreateForm.update((v) => !v);
+  }
+
+  updateCreateSubject(e: Event) {
+    this.createSubject.set((e.target as HTMLInputElement).value);
+  }
+
+  updateCreateMotif(e: Event) {
+    this.createMotif.set((e.target as HTMLSelectElement).value);
+  }
+
+  handleCreateTicket(e: Event) {
+    e.preventDefault();
+    this.createLoading.set(true);
+    this.createError.set('');
+
+    this.chatTicketService
+      .createTicket({
+        subject: this.createSubject(),
+        motif: this.createMotif(),
+      })
+      .subscribe({
+        next: (ticket) => {
+          this.createLoading.set(false);
+          this.showCreateForm.set(false);
+          this.createSubject.set('');
+          this.createMotif.set('');
+          this.ticketId.set(ticket.id);
+          this.loadUserTickets();
+          this.connect();
+        },
+        error: (err) => {
+          this.createLoading.set(false);
+          this.createError.set('Une erreur est survenue :' + err);
+        },
+      });
   }
 }

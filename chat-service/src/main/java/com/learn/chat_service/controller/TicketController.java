@@ -1,7 +1,6 @@
 package com.learn.chat_service.controller;
 
 import java.util.List;
-import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -33,9 +32,7 @@ public class TicketController {
     }
 
     @GetMapping
-    @ResponseStatus(HttpStatus.OK)
     public List<TicketResponse> getCurrentUserTickets(@AuthenticationPrincipal Jwt jwt) {
-        UUID userId = UUID.fromString(jwt.getSubject());
-        return ticketService.getCurrentUserTickets(userId);
+        return ticketService.getCurrentUserTickets(jwt);
     }
 }

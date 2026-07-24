@@ -1,92 +1,248 @@
-<main class="mx-auto max-w-xl px-6 py-12 text-gray-900">
-  <h1 class="mb-4 text-xl font-semibold text-gray-900">Espace chat</h1>
+<main class="min-h-screen bg-gray-50 px-4 py-10">
+  <div class="mx-auto max-w-2xl space-y-4">
+    <div class="rounded-2xl border border-gray-200 bg-white px-6 py-5 shadow-sm">
+      <div class="flex items-start justify-between">
+        <div>
+          <h1 class="text-lg font-semibold text-gray-900">Support client</h1>
+          @if (authService.currentUser(); as user) {
+            <p class="mt-0.5 text-sm text-gray-500">{{ user.name }} · {{ user.email }}</p>
+          }
+        </div>
+        <span class="mt-0.5 rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-600">
+          {{ chatStatus() }}
+        </span>
+      </div>
+    </div>
 
-  @if (authService.currentUser(); as user) {
-    <p class="mb-2 text-sm text-gray-700">
-      Connecté en tant que <strong>{{ user.name }}</strong> ({{ user.username }} — {{ user.email }})
-    </p>
-  }
+    <div class="rounded-2xl border border-gray-200 bg-white shadow-sm">
+      <button
+        type="button"
+        (click)="toggleCreateForm()"
+        class="flex w-full items-center justify-between px-6 py-5 text-left"
+      >
+        <h2 class="text-sm font-medium uppercase tracking-wider text-gray-500">Nouveau ticket</h2>
+        <svg
+          class="h-4 w-4 text-gray-400 transition-transform duration-200"
+          [class.rotate-180]="showCreateForm()"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+        >
+          <path stroke-linecap="round" stroke-linejoin="round" d="m19 9-7 7-7-7" />
+        </svg>
+      </button>
 
-  <p class="mb-6 text-sm text-gray-500">Statut chat-service : {{ chatStatus() }}</p>
+      @if (showCreateForm()) {
+        <form
+          class="border-t border-gray-100 px-6 pb-6 pt-5 space-y-4"
+          (submit)="handleCreateTicket($event)"
+        >
+          <label class="block">
+            <span class="mb-1.5 block text-sm font-medium text-gray-700">Sujet</span>
+            <input
+              [value]="createSubject()"
+              (input)="updateCreateSubject($event)"
+              class="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:border-gray-900 focus:bg-white focus:outline-none focus:ring-1 focus:ring-gray-900"
+              placeholder="Décrivez brièvement votre demande"
+            />
+          </label>
 
-  <div class="mb-6 space-y-3">
-    <!-- Sélection du ticket dynamique -->
-    <label class="block text-sm text-gray-700">
-      Ticket
+          <label class="block">
+            <span class="mb-1.5 block text-sm font-medium text-gray-700">Motif</span>
+            <select
+              [value]="createMotif()"
+              (change)="updateCreateMotif($event)"
+              class="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm text-gray-900 focus:border-gray-900 focus:bg-white focus:outline-none focus:ring-1 focus:ring-gray-900"
+            >
+              <option value="" disabled selected>Sélectionnez un motif</option>
+              <option value="PROBLEME_TECHNIQUE">Problème technique</option>
+              <option value="QUESTION_FACTURATION">Question facturation</option>
+              <option value="RECLAMATION">Réclamation</option>
+            </select>
+          </label>
+
+          <div class="flex items-center justify-between gap-3 pt-1">
+            @if (createError()) {
+              <p class="text-xs text-red-500">{{ createError() }}</p>
+            } @else {
+              <span></span>
+            }
+            <button
+              type="submit"
+              [disabled]="!createSubject() || !createMotif() || createLoading()"
+              class="rounded-xl bg-gray-900 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              @if (createLoading()) {
+                <span class="inline-flex items-center gap-2">
+                  <svg class="h-3.5 w-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle
+                      class="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      stroke-width="4"
+                    />
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+                  </svg>
+                  Création…
+                </span>
+              } @else {
+                Créer le ticket
+              }
+            </button>
+          </div>
+        </form>
+      }
+    </div>
+
+    <div class="rounded-2xl border border-gray-200 bg-white px-6 py-5 shadow-sm">
+      <div class="mb-4 flex items-center justify-between">
+        <h2 class="text-sm font-medium text-gray-500 uppercase tracking-wider">Ticket</h2>
+        <span
+          class="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium transition-colors"
+          [class]="
+            connectionStatus() === 'connecté'
+              ? 'bg-emerald-50 text-emerald-700'
+              : connectionStatus() === 'connexion...'
+                ? 'bg-amber-50 text-amber-700'
+                : 'bg-gray-100 text-gray-500'
+          "
+        >
+          <span
+            class="h-1.5 w-1.5 rounded-full"
+            [class]="
+              connectionStatus() === 'connecté'
+                ? 'bg-emerald-500'
+                : connectionStatus() === 'connexion...'
+                  ? 'bg-amber-400'
+                  : 'bg-gray-400'
+            "
+          ></span>
+          {{ connectionStatus() }}
+        </span>
+      </div>
+
       @if (userTickets().length > 0) {
         <select
           [value]="ticketId()"
           (change)="updateTicketId($event)"
-          class="mt-1 w-full border border-gray-300 px-3 py-2 bg-white"
+          class="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm text-gray-900 shadow-sm focus:border-gray-900 focus:bg-white focus:outline-none focus:ring-1 focus:ring-gray-900"
         >
           @for (ticket of userTickets(); track ticket.id) {
-            <option [value]="ticket.id">{{ ticket.subject }} ({{ ticket.status }})</option>
+            <option [value]="ticket.id">{{ ticket.subject }} — {{ ticket.status }}</option>
           }
         </select>
       } @else {
         <input
           [value]="ticketId()"
           (input)="updateTicketId($event)"
-          class="mt-1 w-full border border-gray-300 px-3 py-2"
-          placeholder="UUID du ticket"
+          class="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm text-gray-900 shadow-sm placeholder:text-gray-400 focus:border-gray-900 focus:bg-white focus:outline-none focus:ring-1 focus:ring-gray-900"
+          placeholder="Identifiant du ticket"
         />
       }
-    </label>
 
-    <p class="text-sm text-gray-500">Connexion WS : {{ connectionStatus() }}</p>
+      <div class="mt-4 flex gap-2.5">
+        <button
+          type="button"
+          (click)="connect()"
+          [disabled]="!ticketId()"
+          class="flex-1 rounded-xl bg-gray-900 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          Se connecter
+        </button>
+        <button
+          type="button"
+          (click)="disconnect()"
+          class="rounded-xl border border-gray-200 px-4 py-2.5 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50"
+        >
+          Déconnecter
+        </button>
+      </div>
+    </div>
 
-    <div class="flex gap-2">
-      <button
-        type="button"
-        (click)="connect()"
-        [disabled]="!ticketId()"
-        class="border border-gray-300 px-3 py-2 disabled:opacity-50"
-      >
-        Se connecter
-      </button>
-      <button type="button" (click)="disconnect()" class="border border-gray-300 px-3 py-2">
-        Déconnecter
-      </button>
+    <div class="rounded-2xl border border-gray-200 bg-white shadow-sm">
+      <div class="flex items-center justify-between border-b border-gray-100 px-6 py-4">
+        <h2 class="text-sm font-semibold text-gray-900">Messages</h2>
+        @if (ticketId()) {
+          <code class="rounded-lg bg-gray-100 px-2.5 py-1 font-mono text-xs text-gray-500">
+            {{ ticketId() }}
+          </code>
+        }
+      </div>
+
+      <div class="h-96 overflow-y-auto px-6 py-4">
+        @if (messages().length === 0) {
+          <div class="flex h-full flex-col items-center justify-center text-center">
+            <div class="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-gray-100">
+              <svg
+                class="h-5 w-5 text-gray-400"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 0 1 .865-.501 48.172 48.172 0 0 0 3.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0 0 12 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018Z"
+                />
+              </svg>
+            </div>
+            <p class="text-sm font-medium text-gray-600">Aucun message</p>
+            <p class="mt-1 text-xs text-gray-400">Connectez-vous à un ticket pour commencer.</p>
+          </div>
+        }
+
+        <div class="space-y-5">
+          @for (message of messages(); track message.id ?? message.sentAt) {
+            <article>
+              <div class="mb-1.5 flex items-baseline gap-2">
+                <span class="text-xs font-semibold text-gray-700">
+                  {{ message.senderId }}
+                </span>
+                <span class="text-xs text-gray-400">{{ message.sentAt }}</span>
+              </div>
+              <div
+                class="rounded-xl rounded-tl-sm bg-gray-50 px-4 py-3 text-sm leading-relaxed text-gray-800 whitespace-pre-wrap"
+              >
+                {{ message.content }}
+              </div>
+            </article>
+          }
+        </div>
+      </div>
+
+      <div class="border-t border-gray-100 px-4 py-4">
+        <form class="flex items-center gap-3" (submit)="handleSubmit($event)">
+          <input
+            [value]="draftMessage()"
+            (input)="updateDraftMessage($event)"
+            class="flex-1 rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm text-gray-900 shadow-sm placeholder:text-gray-400 focus:border-gray-900 focus:bg-white focus:outline-none focus:ring-1 focus:ring-gray-900"
+            placeholder="Écrivez votre message…"
+          />
+          <button
+            type="submit"
+            [disabled]="!canSend()"
+            class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gray-900 text-white transition-colors hover:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            <svg
+              class="h-4 w-4"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5"
+              />
+            </svg>
+          </button>
+        </form>
+      </div>
     </div>
   </div>
-
-  <section class="space-y-4">
-    <div class="flex items-baseline justify-between gap-4">
-      <h2 class="text-lg font-semibold text-gray-900">Messages</h2>
-      @if (ticketId()) {
-        <p class="text-xs text-gray-500">/topic/tickets/{{ ticketId() }}</p>
-      }
-    </div>
-
-    @if (messages().length === 0) {
-      <p class="text-sm text-gray-500">Aucun message.</p>
-    }
-
-    <div class="space-y-3">
-      @for (message of messages(); track message.id ?? message.sentAt) {
-        <article class="border-b border-gray-200 pb-3">
-          <p class="text-xs text-gray-500">{{ message.senderId }} · {{ message.sentAt }}</p>
-          <p class="whitespace-pre-wrap text-sm text-gray-900">
-            {{ message.content }}
-          </p>
-        </article>
-      }
-    </div>
-
-    <form class="flex gap-2" (submit)="handleSubmit($event)">
-      <input
-        [value]="draftMessage()"
-        (input)="updateDraftMessage($event)"
-        class="flex-1 border border-gray-300 px-3 py-2"
-        placeholder="Tape ton message ici"
-      />
-      <button
-        type="submit"
-        class="border border-gray-300 px-3 py-2 disabled:opacity-50"
-        [disabled]="!canSend()"
-      >
-        Envoyer
-      </button>
-    </form>
-  </section>
 </main>

@@ -7,3 +7,5 @@ export type Ticket = {
   createdAt: string;
   resolvedAt?: string;
 };
+
+export type CreateTicketRequest = Pick<Ticket, 'subject' | 'motif'>;

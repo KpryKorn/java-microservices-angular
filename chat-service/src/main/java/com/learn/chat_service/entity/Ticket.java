@@ -3,6 +3,8 @@ package com.learn.chat_service.entity;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+import org.hibernate.annotations.CreationTimestamp;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -41,9 +43,11 @@ public class Ticket {
     @Column(length = 100)
     private String motif;
 
+    @Builder.Default
     @Column(nullable = false, length = 30)
-    private String status;
+    private String status = "OPEN";
 
+    @CreationTimestamp
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
