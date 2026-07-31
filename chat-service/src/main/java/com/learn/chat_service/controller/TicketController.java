@@ -3,6 +3,7 @@ package com.learn.chat_service.controller;
 import java.util.List;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -34,5 +35,11 @@ public class TicketController {
     @GetMapping
     public List<TicketResponse> getCurrentUserTickets(@AuthenticationPrincipal Jwt jwt) {
         return ticketService.getCurrentUserTickets(jwt);
+    }
+
+    @GetMapping("/open")
+    @PreAuthorize("hasRole('ADMIN')")
+    public List<TicketResponse> getOpenTickets() {
+        return ticketService.getOpenTickets();
     }
 }

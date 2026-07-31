@@ -97,6 +97,48 @@
       }
     </div>
 
+    @if (isAdmin()) {
+      <div class="rounded-2xl border border-amber-100 bg-amber-50 shadow-sm">
+        <div class="flex items-center justify-between px-6 py-5">
+          <div>
+            <h2 class="text-sm font-medium uppercase tracking-wider text-amber-700">
+              Administration
+            </h2>
+            <p class="mt-0.5 text-xs text-amber-600">Tickets ouverts en attente</p>
+          </div>
+          <span class="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-700">
+            {{ openTickets().length }}
+          </span>
+        </div>
+
+        @if (openTickets().length === 0) {
+          <div class="border-t border-amber-100 px-6 py-8 text-center">
+            <p class="text-sm text-amber-600">Aucun ticket ouvert pour l'instant.</p>
+          </div>
+        } @else {
+          <ul class="border-t border-amber-100 divide-y divide-amber-100">
+            @for (ticket of openTickets(); track ticket.id) {
+              <li class="flex items-center justify-between px-6 py-4">
+                <div class="min-w-0">
+                  <p class="truncate text-sm font-medium text-gray-900">{{ ticket.subject }}</p>
+                  <p class="mt-0.5 text-xs text-gray-500">
+                    {{ ticket.motif }} · {{ ticket.createdAt | date: 'dd/MM HH:mm' }}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  (click)="connectToTicket(ticket.id)"
+                  class="ml-4 shrink-0 rounded-lg border border-amber-200 bg-white px-3 py-1.5 text-xs font-medium text-amber-700 transition-colors hover:bg-amber-50"
+                >
+                  Rejoindre
+                </button>
+              </li>
+            }
+          </ul>
+        }
+      </div>
+    }
+
     <div class="rounded-2xl border border-gray-200 bg-white px-6 py-5 shadow-sm">
       <div class="mb-4 flex items-center justify-between">
         <h2 class="text-sm font-medium text-gray-500 uppercase tracking-wider">Ticket</h2>

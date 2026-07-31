@@ -15,6 +15,10 @@ export class ChatTicketService {
     return this.http.get<Ticket[]>(this.baseUrl, { withCredentials: true });
   }
 
+  getOpenTickets(): Observable<Ticket[]> {
+    return this.http.get<Ticket[]>(`${this.baseUrl}/open`, { withCredentials: true });
+  }
+
   createTicket(request: CreateTicketRequest): Observable<Ticket> {
     return this.http.post<Ticket>(this.baseUrl, request, { withCredentials: true });
   }

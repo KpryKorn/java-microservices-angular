@@ -53,6 +53,15 @@ public class TicketService {
                 .toList();
     }
 
+    @Transactional(readOnly = true)
+    public List<TicketResponse> getOpenTickets() {
+        return ticketRepository
+                .findByStatusOrderByCreatedAtAsc("OPEN")
+                .stream()
+                .map(this::mapToResponse)
+                .toList();
+    }
+
     private TicketResponse mapToResponse(Ticket ticket) {
         return new TicketResponse(
                 ticket.getId(),

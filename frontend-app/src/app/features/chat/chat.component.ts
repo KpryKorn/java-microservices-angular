@@ -28,6 +28,7 @@ export class ChatComponent implements OnInit, OnDestroy {
   protected readonly ticketId = signal<string>('');
   protected readonly senderId = signal<string>('');
   protected readonly userTickets = signal<Ticket[]>([]);
+  protected readonly openTickets = signal<Ticket[]>([]);
   protected readonly draftMessage = signal('');
   protected readonly messages = signal<ChatTicketMessage[]>([]);
   protected readonly showCreateForm = signal(false);
@@ -44,6 +45,10 @@ export class ChatComponent implements OnInit, OnDestroy {
       this.ticketId().trim().length > 0,
   );
 
+  protected readonly isAdmin = computed(
+    () => this.authService.currentUser()?.roles?.includes('ADMIN') ?? false,
+  );
+
   ngOnInit(): void {
     this.http
       .get(`${environment.gatewayUrl}/api/chat/ping`, {
@@ -54,6 +59,10 @@ export class ChatComponent implements OnInit, OnDestroy {
         next: (res) => this.chatStatus.set('disponible'),
         error: () => this.chatStatus.set('indisponible'),
       });
+
+    if (this.isAdmin()) {
+      this.loadOpenTickets();
+    }
 
     const currentUser = this.authService.currentUser();
     if (currentUser?.id) {
@@ -81,6 +90,13 @@ export class ChatComponent implements OnInit, OnDestroy {
         }
       },
       error: (err) => console.error('Erreur lors de la récupération des tickets', err),
+    });
+  }
+
+  private loadOpenTickets() {
+    this.chatTicketService.getOpenTickets().subscribe({
+      next: (tickets) => this.openTickets.set(tickets),
+      error: () => {},
     });
   }
 
@@ -118,6 +134,11 @@ export class ChatComponent implements OnInit, OnDestroy {
 
   protected selectTicket(id: string): void {
     this.ticketId.set(id);
+  }
+
+  protected connectToTicket(ticketId: string) {
+    this.ticketId.set(ticketId);
+    this.connect();
   }
 
   protected updateDraftMessage(event: Event): void {

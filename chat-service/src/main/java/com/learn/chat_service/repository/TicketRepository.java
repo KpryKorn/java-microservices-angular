@@ -9,4 +9,6 @@ import com.learn.chat_service.entity.Ticket;
 
 public interface TicketRepository extends JpaRepository<Ticket, UUID> {
     List<Ticket> findByUserShadowIdOrderByCreatedAtDesc(UUID id);
+
+    List<Ticket> findByStatusOrderByCreatedAtAsc(String status);
 }
