@@ -1,6 +1,7 @@
 package com.learn.chat_service.service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
@@ -44,5 +45,18 @@ public class TicketMessageService {
                                 senderUsername,
                                 savedMessage.getContent(),
                                 savedMessage.getSentAt());
+        }
+
+        @Transactional(readOnly = true)
+        public List<TicketMessageResponse> getMessagesByTicketId(UUID ticketId) {
+                return ticketMessageRepository.findByTicketIdOrderBySentAtAsc(ticketId).stream()
+                                .map(msg -> new TicketMessageResponse(
+                                                msg.getId(),
+                                                ticketId,
+                                                msg.getSenderId(),
+                                                null,
+                                                msg.getContent(),
+                                                msg.getSentAt()))
+                                .toList();
         }
 }

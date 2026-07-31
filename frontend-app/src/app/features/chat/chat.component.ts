@@ -100,10 +100,7 @@ export class ChatComponent implements OnInit, OnDestroy {
     });
   }
 
-  connect(): void {
-    if (!this.ticketId()) return;
-
-    this.messages.set([]);
+  private openWebSocket(): void {
     this.chatSessionService.connect(
       this.ticketId(),
       (message) => {
@@ -115,6 +112,20 @@ export class ChatComponent implements OnInit, OnDestroy {
         );
       },
     );
+  }
+
+  connect(): void {
+    if (!this.ticketId()) return;
+
+    this.messages.set([]);
+
+    this.chatTicketService.getMessages(this.ticketId()).subscribe({
+      next: (history) => {
+        this.messages.set(history);
+        this.openWebSocket();
+      },
+      error: () => this.openWebSocket(),
+    });
   }
 
   disconnect(): void {

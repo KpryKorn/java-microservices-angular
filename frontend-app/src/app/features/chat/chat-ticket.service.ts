@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { CreateTicketRequest, Ticket } from '../../core/models/ticket.model';
+import { ChatTicketMessage, CreateTicketRequest, Ticket } from '../../core/models/ticket.model';
 
 @Injectable({
   providedIn: 'root',
@@ -17,6 +17,12 @@ export class ChatTicketService {
 
   getOpenTickets(): Observable<Ticket[]> {
     return this.http.get<Ticket[]>(`${this.baseUrl}/open`, { withCredentials: true });
+  }
+
+  getMessages(ticketId: string): Observable<ChatTicketMessage[]> {
+    return this.http.get<ChatTicketMessage[]>(`${this.baseUrl}/${ticketId}/messages`, {
+      withCredentials: true,
+    });
   }
 
   createTicket(request: CreateTicketRequest): Observable<Ticket> {
