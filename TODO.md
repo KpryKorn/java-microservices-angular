@@ -2,7 +2,7 @@
   - [x] CORS ?
 - [x] Styliser l'app frontend
 - [x] Récupérer les vrais valeurs ticketId et senderId pour le chat
-- [] Interface admin -> l'admin choisit son ticket et s'y connecte
-  - [] endpoint qui renvoie tous les tickets ouverts
-  - [] sécurisé par le rôle admin uniquement
-- [] Historique de message lié au ticket
+- [x] Interface admin -> l'admin choisit son ticket et s'y connecte
+  - [x] endpoint qui renvoie tous les tickets ouverts
+  - [x] sécurisé par le rôle admin uniquement
+- [x] Historique de message lié au ticket
