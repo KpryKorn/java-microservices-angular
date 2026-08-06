@@ -12,6 +12,7 @@ import { ChatTicketService } from './chat-ticket.service';
   selector: 'app-chat',
   imports: [DatePipe],
   templateUrl: './chat.component.html',
+  styleUrl: './chat.component.css',
 })
 export class ChatComponent implements OnInit, OnDestroy {
   private readonly http = inject(HttpClient);

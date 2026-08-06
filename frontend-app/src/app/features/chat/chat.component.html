@@ -216,7 +216,7 @@
         }
       </div>
 
-      <div class="h-96 overflow-y-auto px-4 py-4">
+      <div class="h-96 overflow-y-auto bg-gray-50 px-4 py-4">
         @if (messages().length === 0) {
           <div class="flex h-full flex-col items-center justify-center text-center">
             <div class="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-gray-100">
@@ -242,66 +242,43 @@
         <div class="space-y-3">
           @for (message of messages(); track message.id ?? message.sentAt) {
             @if (message.senderId === authService.currentUser()?.id) {
-              <!-- Message envoyé (nous) — droite -->
-              <div class="flex items-end justify-end gap-2">
-                <div class="max-w-[72%]">
-                  <p class="mb-1 text-right text-xs text-gray-400">
-                    {{ message.sentAt | date: 'HH:mm' }}
-                  </p>
+              <div class="bubble-in flex items-end justify-end gap-2">
+                <div class="max-w-[70%]">
                   <div
-                    class="rounded-2xl rounded-br-sm bg-gray-900 px-4 py-2.5 text-sm leading-relaxed text-white whitespace-pre-wrap"
+                    class="rounded-2xl rounded-br-sm bg-gray-900 px-4 py-2.5 text-sm leading-relaxed text-white shadow-sm whitespace-pre-wrap"
                   >
                     {{ message.content }}
                   </div>
+                  <p class="mt-1 pr-1 text-right text-[10px] text-gray-400">
+                    {{ message.sentAt | date: 'HH:mm' }}
+                  </p>
                 </div>
-                <!-- Avatar nous -->
                 <div
-                  class="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-gray-900 p-1.5"
+                  class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gray-900 ring-2 ring-emerald-400 ring-offset-1"
                 >
-                  <svg
-                    class="h-full w-full text-white"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="1.5"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z"
-                    />
-                  </svg>
+                  <span class="text-[10px] font-bold text-white">
+                    {{ (authService.currentUser()?.name?.charAt(0) ?? '?').toUpperCase() }}
+                  </span>
                 </div>
               </div>
             } @else {
-              <!-- Message reçu (autre) — gauche -->
-              <div class="flex items-end gap-2">
-                <!-- Avatar autre -->
+              <div class="bubble-in flex items-end gap-2">
                 <div
-                  class="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-gray-100 p-1.5"
+                  class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-sky-100"
                 >
-                  <svg
-                    class="h-full w-full text-gray-500"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="1.5"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z"
-                    />
-                  </svg>
+                  <span class="text-[10px] font-bold text-sky-600">
+                    {{ message.senderUsername.charAt(0).toUpperCase() }}
+                  </span>
                 </div>
-                <div class="max-w-[72%]">
-                  <p class="mb-1 text-xs font-medium text-gray-600">{{ message.senderUsername }}</p>
+                <div class="max-w-[70%]">
                   <div
-                    class="rounded-2xl rounded-bl-sm bg-gray-100 px-4 py-2.5 text-sm leading-relaxed text-gray-900 whitespace-pre-wrap"
+                    class="rounded-2xl rounded-bl-sm bg-white px-4 py-2.5 text-sm leading-relaxed text-gray-900 shadow-sm whitespace-pre-wrap"
                   >
                     {{ message.content }}
                   </div>
-                  <p class="mt-1 text-xs text-gray-400">{{ message.sentAt | date: 'HH:mm' }}</p>
+                  <p class="mt-1 pl-1 text-[10px] text-gray-400">
+                    {{ message.sentAt | date: 'HH:mm' }}
+                  </p>
                 </div>
               </div>
             }
@@ -309,21 +286,24 @@
         </div>
       </div>
 
-      <div class="border-t border-gray-100 px-4 py-4">
-        <form class="flex items-center gap-3" (submit)="handleSubmit($event)">
+      <div class="border-t border-gray-100 bg-white px-4 py-3">
+        <form
+          class="flex items-center gap-3 rounded-2xl border border-gray-200 bg-gray-50 px-4 py-2.5"
+          (submit)="handleSubmit($event)"
+        >
           <input
             [value]="draftMessage()"
             (input)="updateDraftMessage($event)"
-            class="flex-1 rounded-xl border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm text-gray-900 shadow-sm placeholder:text-gray-400 focus:border-gray-900 focus:bg-white focus:outline-none focus:ring-1 focus:ring-gray-900"
-            placeholder="Écrivez votre message…"
+            class="flex-1 bg-transparent text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none"
+            placeholder="Message…"
           />
           <button
             type="submit"
             [disabled]="!canSend()"
-            class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gray-900 text-white transition-colors hover:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-40"
+            class="send-btn flex h-7 w-7 shrink-0 items-center justify-center rounded-xl bg-gray-900 text-white disabled:cursor-not-allowed disabled:opacity-40"
           >
             <svg
-              class="h-4 w-4"
+              class="h-3.5 w-3.5"
               fill="none"
               stroke="currentColor"
               stroke-width="2"
