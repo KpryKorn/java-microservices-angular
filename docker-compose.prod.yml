@@ -110,7 +110,7 @@ services:
       - "8080"
     volumes:
       - ./keycloak/realm-export.json:/opt/keycloak/data/import/realm.json
-      - - /data/coolify/applications/v66ricte43w7p2x82nyf1izx/keycloak/themes/microservices:/opt/keycloak/themes/microservices
+      - /data/coolify/applications/v66ricte43w7p2x82nyf1izx/keycloak/themes/microservices:/opt/keycloak/themes/microservices
     depends_on:
       keycloak-db:
         condition: service_healthy
