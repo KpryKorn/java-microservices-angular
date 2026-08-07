@@ -1,4 +1,4 @@
 export const environment = {
   production: true,
-  gatewayUrl: 'https://app.kprykorn.dev',
+  gatewayUrl: 'https://api.kprykorn.dev',
 };
