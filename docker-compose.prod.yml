@@ -92,7 +92,7 @@ services:
   keycloak:
     image: quay.io/keycloak/keycloak:24.0.5
     container_name: keycloak-server
-    command: start --import-realm
+    command: start --import-realm --optimized
     env_file:
       - .env
     environment:
@@ -103,7 +103,7 @@ services:
       KC_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD}
       KEYCLOAK_ADMIN: admin
       KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
-      KC_HOSTNAME: ${KEYCLOAK_PUBLIC_URL}
+      KC_HOSTNAME: ${SERVICE_FQDN_KEYCLOAK}
       KC_HOSTNAME_STRICT: "false"
       KC_PROXY: edge
     expose:
