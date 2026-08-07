@@ -1,0 +1,152 @@
+services:
+# --- BDD ---
+  chat-db:
+    image: postgres:16-alpine
+    container_name: chat-database
+    environment:
+      POSTGRES_USER: ${CHAT_DB_USER}
+      POSTGRES_PASSWORD: ${CHAT_DB_PASSWORD}
+      POSTGRES_DB: chat_db
+    expose:
+      - "5432"
+    volumes:
+      - chat-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${CHAT_DB_USER} -d chat_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  user-db:
+    image: postgres:16-alpine
+    container_name: user-database
+    environment:
+      POSTGRES_USER: ${USER_DB_USER}
+      POSTGRES_PASSWORD: ${USER_DB_PASSWORD}
+      POSTGRES_DB: user_db
+    expose:
+      - "5432"
+    volumes:
+      - user-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${USER_DB_USER} -d user_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  keycloak-db:
+    image: postgres:16-alpine
+    container_name: keycloak-database
+    environment:
+      POSTGRES_USER: ${KEYCLOAK_DB_USER}
+      POSTGRES_PASSWORD: ${KEYCLOAK_DB_PASSWORD}
+      POSTGRES_DB: keycloak
+    expose:
+      - "5432"
+    volumes:
+      - keycloak-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${KEYCLOAK_DB_USER} -d keycloak"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+# --- MICROSERVICES ---
+  chat-api:
+    build:
+      context: ./chat-service
+    container_name: chat-microservice
+    expose:
+      - "8082"
+    env_file:
+      - .env
+    environment:
+      CHAT_DB_URL: jdbc:postgresql://chat-db:5432/chat_db
+      KEYCLOAK_INTERNAL_URL: http://keycloak:8080
+      KEYCLOAK_PUBLIC_URL: ${KEYCLOAK_PUBLIC_URL}
+    depends_on:
+      chat-db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  user-api:
+    build:
+      context: ./user-service
+    container_name: user-microservice
+    expose:
+      - "8081"
+    env_file:
+      - .env
+    environment:
+      USER_DB_URL: jdbc:postgresql://user-db:5432/user_db
+      KEYCLOAK_INTERNAL_URL: http://keycloak:8080
+      KEYCLOAK_PUBLIC_URL: ${KEYCLOAK_PUBLIC_URL}
+    depends_on:
+      user-db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:24.0.5
+    container_name: keycloak-server
+    command: start --import-realm
+    env_file:
+      - .env
+    environment:
+      KC_DB: postgres
+      KC_DB_URL_HOST: keycloak-db
+      KC_DB_URL_DATABASE: keycloak
+      KC_DB_USERNAME: ${KEYCLOAK_DB_USER}
+      KC_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD}
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
+      KC_HOSTNAME: ${KEYCLOAK_PUBLIC_URL}
+      KC_HOSTNAME_STRICT: "false"
+      KC_PROXY: edge
+    expose:
+      - "8080"
+    volumes:
+      - ./keycloak/realm-export.json:/opt/keycloak/data/import/realm.json
+      - ./keycloak/themes/microservices:/opt/keycloak/themes/microservices
+    depends_on:
+      keycloak-db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  gateway:
+    build:
+      context: ./api-gateway
+    container_name: api-gateway
+    expose:
+      - "8080"
+    env_file:
+      - .env
+    environment:
+      CHAT_INTERNAL_URL: http://chat-api:8082
+      USER_INTERNAL_URL: http://user-api:8081
+      KEYCLOAK_INTERNAL_URL: http://keycloak:8080
+      KEYCLOAK_PUBLIC_URL: ${KEYCLOAK_PUBLIC_URL}
+      FRONTEND_URL: ${FRONTEND_URL}
+    depends_on:
+      - keycloak
+    restart: unless-stopped
+
+# --- FRONTEND ---
+  frontend:
+    build:
+      context: ./frontend-app  # chemin vers le dossier contenant package.json + Dockerfile
+      dockerfile: Dockerfile
+    container_name: frontend-app
+    expose:
+      - "80"
+    depends_on:
+      - gateway
+    restart: unless-stopped
+
+volumes:
+  chat-db-data:
+  user-db-data:
+  keycloak-db-data:
