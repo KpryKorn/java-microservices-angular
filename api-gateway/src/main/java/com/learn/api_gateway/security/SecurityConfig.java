@@ -3,6 +3,8 @@ package com.learn.api_gateway.security;
 import java.net.URI;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -37,6 +39,8 @@ import reactor.core.publisher.Mono;
 @Configuration
 @EnableWebFluxSecurity
 public class SecurityConfig {
+
+    private static final Logger log = LoggerFactory.getLogger(SecurityConfig.class);
 
     private final URI frontendUri;
     private final URI chatRedirectUri;
@@ -86,12 +90,24 @@ public class SecurityConfig {
                                     .flatMap(client -> {
                                         String accessToken = client.getAccessToken().getTokenValue();
                                         return userSyncService.syncUser(oidcUser, accessToken);
-                                    }).then(Mono.defer(() -> {
+                                    })
+                                    .onErrorResume(error -> {
+                                        log.error("OAuth2 login succeeded but post-login sync failed", error);
+                                        return Mono.empty();
+                                    })
+                                    .then(Mono.defer(() -> {
                                         webFilterExchange.getExchange().getResponse().setStatusCode(HttpStatus.FOUND);
                                         webFilterExchange.getExchange().getResponse().getHeaders()
                                                 .setLocation(chatRedirectUri);
                                         return webFilterExchange.getExchange().getResponse().setComplete();
                                     }));
+                        })
+                        .authenticationFailureHandler((webFilterExchange, exception) -> {
+                            log.error("OAuth2 login failed", exception);
+                            webFilterExchange.getExchange().getResponse().setStatusCode(HttpStatus.FOUND);
+                            webFilterExchange.getExchange().getResponse().getHeaders()
+                                    .setLocation(URI.create(frontendUri + "/login?error=oauth2"));
+                            return webFilterExchange.getExchange().getResponse().setComplete();
                         }))
                 .logout(logout -> logout.logoutSuccessHandler(oidcLogoutSuccessHandler()))
                 .build();

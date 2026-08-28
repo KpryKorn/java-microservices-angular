@@ -9,10 +9,12 @@
             "enabled": true,
             "protocol": "openid-connect",
             "publicClient": false,
-            "secret": "bW9uLXN1cGVyLXNlY3JldC1wb3VyLWxlcy1qd3QtZGUtbW9uLWFwcGxpY2F0aW9uLW1kZAo=",
+            "secret": "CHANGE_ME_IN_KEYCLOAK",
             "redirectUris": [
                 "http://localhost:8080/*",
-                "https://api.kprykorn.dev/*"
+                "http://localhost:8080/login/oauth2/code/keycloak",
+                "https://api.kprykorn.dev/*",
+                "https://api.kprykorn.dev/login/oauth2/code/keycloak"
             ],
             "webOrigins": [
                 "http://localhost:4200",
@@ -49,7 +51,7 @@
             "credentials": [
                 {
                     "type": "password",
-                    "value": "password",
+                    "value": "CHANGE_ME",
                     "temporary": true
                 }
             ],
@@ -67,7 +69,7 @@
             "credentials": [
                 {
                     "type": "password",
-                    "value": "admin",
+                    "value": "CHANGE_ME",
                     "temporary": true
                 }
             ],
