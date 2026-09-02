@@ -116,11 +116,15 @@ export class ChatComponent implements OnInit, OnDestroy {
   }
 
   connect(): void {
-    if (!this.ticketId()) return;
+    this.connectWithId(this.ticketId());
+  }
+
+  private connectWithId(ticketId: string): void {
+    if (!ticketId) return;
 
     this.messages.set([]);
 
-    this.chatTicketService.getMessages(this.ticketId()).subscribe({
+    this.chatTicketService.getMessages(ticketId).subscribe({
       next: (history) => {
         this.messages.set(history);
         this.openWebSocket();
@@ -150,7 +154,7 @@ export class ChatComponent implements OnInit, OnDestroy {
 
   protected connectToTicket(ticketId: string) {
     this.ticketId.set(ticketId);
-    this.connect();
+    this.connectWithId(ticketId);
   }
 
   protected updateDraftMessage(event: Event): void {

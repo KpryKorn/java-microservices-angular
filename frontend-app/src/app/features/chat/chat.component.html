@@ -267,7 +267,7 @@
                   class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-sky-100"
                 >
                   <span class="text-[10px] font-bold text-sky-600">
-                    {{ message.senderUsername.charAt(0).toUpperCase() }}
+                    {{ (message.senderUsername?.charAt(0) ?? '?').toUpperCase() }}
                   </span>
                 </div>
                 <div class="max-w-[70%]">

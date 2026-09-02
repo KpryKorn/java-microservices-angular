@@ -2,7 +2,7 @@ export type ChatTicketMessage = {
   id?: string;
   ticketId: string;
   senderId: string;
-  senderUsername: string;
+  senderUsername?: string;
   content: string;
   sentAt: string;
 };
